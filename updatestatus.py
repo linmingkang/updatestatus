@@ -42,7 +42,7 @@ except:
     print('mysql数据库连接失败，请确保 /home/chsr/cf.d/trainuser.conf中数据库用户名、密码正确。\n程序退出')
     exit()
 cursor = db.cursor()
-cursor.execute('delete from train_other_info;')
+#cursor.execute('delete from train_other_info;')
 cursor.execute('select train_id,train_ip from train_ip;')
 id_lists = cursor.fetchall()
 ids = {}
@@ -50,12 +50,18 @@ for train_id in id_lists:
     ids[train_id[0]] = train_id[1]
     #print(ids)
 for train_id,train_ip in ids.items():
-    try:
-        sql = "insert into train_other_info(train_id,curr_ver,pending_ver,update_status) values('%s','0','0','0');" % (train_id)
-        db_insert_update_del(cursor, sql)
-    except:
-        print("init fail")
+    sql = "select * from train_other_info where train_id='%s';" % train_id
+    cursor.execute(sql)
+    old_data = cursor.fetchall()
+    if old_data:
         pass
+    else:
+        try:
+            sql = "insert into train_other_info(train_id,curr_ver,pending_ver,update_status) values('%s','0','0','0');" % (train_id)
+            db_insert_update_del(cursor, sql)
+        except:
+            print("init fail")
+            pass
 
 oldFileNames="1"
 train_oldFileNames="1"
