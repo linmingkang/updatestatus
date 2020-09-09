@@ -50,11 +50,12 @@ id_lists = cursor.fetchall()
 ids = {}
 for train_id in id_lists:
     ids[train_id[0]] = train_id[1]
-    #print(ids)
+    print(ids)
 for train_id,train_ip in ids.items():
     sql = "select * from train_other_info where train_id='%s';" % train_id
     cursor.execute(sql)
     old_data = cursor.fetchall()
+    print(old_data)
     if old_data:
         pass
     else:
@@ -92,6 +93,7 @@ while True:
     updatefile_path = '/home/chsr/data.d/ground-to-train.d/public'
     try:
         newFileNamesyuan = os.listdir(updatefile_path)
+        print(newFileNamesyuan)
         if ".zip" in newFileNamesyuan[0]:
             newFileNames = newFileNamesyuan[0].split('.zip')[0]
             print(newFileNames)
@@ -118,12 +120,13 @@ while True:
     ids = {}
     for train_id in id_lists:
         ids[train_id[0]] = train_id[1]
-    #print(ids)
+    print(ids)
     for train_id,pending_ver in ids.items():
         try:
             train_updatefile_path = '/home/chsr/data.d/ground-to-train.d/%s'%train_id
             try:
                 train_newFileNamesyuan = os.listdir(train_updatefile_path)
+                print(train_newFileNamesyuan)
                 if ".zip" in train_newFileNamesyuan[0]:
                     train_newFileNames = train_newFileNamesyuan[0].split('.zip')[0]
                     print(train_newFileNames)
@@ -152,13 +155,14 @@ while True:
         train_ids = {}
         for train_id in train_id_lists:
             train_ids[train_id[0]] = train_id[1]
+        print(train_ids)
         for train_id, pending_ver in train_ids.items():
             try:
                 #fileList = os.listdir('/home/chsr/data.d/train-to-ground.d/%s/updateinfo/'%train_id)
                 #print(fileList[0])
                 file_name='%s+%s'%(train_id,pending_ver)
                 file_path='/home/chsr/data.d/train-to-ground.d/%s/updateinfo/%s'%(train_id,file_name)
-                #print(file_path)
+                print(file_path)
                 file_r = open(file_path,'r')
                 status = file_r.readline(1)
                 print(status)
