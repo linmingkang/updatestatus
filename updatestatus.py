@@ -6,6 +6,7 @@ ping_interval = 3
 db_user = ''
 db_password = ''
 
+#读取配置文件参数
 try:
     file_r = open('/home/chsr/cf.d/groundusr.conf', 'r')
     file_r.readline()
@@ -21,7 +22,7 @@ db_host = '127.0.0.1'
 db_port = 3306
 db_name = 'db_ground_transfer'
 
-
+#执行sql语句的方法
 def db_insert_update_del(cursor, sql):
     try:
         cursor.execute(sql)
@@ -29,7 +30,7 @@ def db_insert_update_del(cursor, sql):
     except:
         db.rollback()
 
-
+#连接数据库
 try:
     db = pymysql.connect(
         host=db_host,
@@ -42,6 +43,7 @@ except:
     print('mysql数据库连接失败，请确保 /home/chsr/cf.d/trainuser.conf中数据库用户名、密码正确。\n程序退出')
     exit()
 cursor = db.cursor()
+#初始化train_other_info
 #cursor.execute('delete from train_other_info;')
 cursor.execute('select train_id,train_ip from train_ip;')
 id_lists = cursor.fetchall()
@@ -62,11 +64,15 @@ for train_id,train_ip in ids.items():
         except:
             print("init fail")
             pass
+            #exit(0)
 
+#两对参数，分别用于公共更新和单独车辆更新
 oldFileNames="1"
 train_oldFileNames="1"
 newFileNames=''
 train_newFileNames=''
+
+
 while True:
     print('start')
     try:
@@ -81,6 +87,8 @@ while True:
         print('mysql数据库连接失败，请确保 /home/chsr/cf.d/trainuser.conf中数据库用户名、密码正确。\n程序退出')
         exit()
     cursor = db.cursor()
+
+    # 发现public文件夹下的更新包，并获取其版本,更新表所有项的更新状态和待更新版本内容
     updatefile_path = '/home/chsr/data.d/ground-to-train.d/public'
     try:
         newFileNamesyuan = os.listdir(updatefile_path)
@@ -103,6 +111,8 @@ while True:
     else:
         #print("noupdatefile")
         pass
+
+    # 所有车辆指定文件夹下是否有更新包，有的话就更新相应条目
     cursor.execute('select train_id, pending_ver from train_other_info;')
     id_lists = cursor.fetchall()
     ids = {}
@@ -133,7 +143,7 @@ while True:
         except:
             pass
 
-
+    # 找到所有处于更新状态的条目，查找相应文件夹是否有标志文件，并做相应操作
     cursor.execute('select train_id, pending_ver from train_other_info where update_status=1;')
     train_id_lists = cursor.fetchall()
     if len(train_id_lists) == 0:
