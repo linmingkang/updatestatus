@@ -50,12 +50,12 @@ id_lists = cursor.fetchall()
 ids = {}
 for train_id in id_lists:
     ids[train_id[0]] = train_id[1]
-    print(ids)
+    #print(ids)
 for train_id,train_ip in ids.items():
     sql = "select * from train_other_info where train_id='%s';" % train_id
     cursor.execute(sql)
     old_data = cursor.fetchall()
-    print(old_data)
+    #print(old_data)
     if old_data:
         pass
     else:
@@ -71,8 +71,19 @@ for train_id,train_ip in ids.items():
 oldFileNames="1"
 train_oldFileNames="1"
 newFileNames=''
-train_newFileNames=''
+train_newFileNames={}
+train_filerecord={}
 
+cursor.execute('SELECT pending_ver, count( * ) AS count FROM train_other_info GROUP BY pending_ver ORDER BY count DESC LIMIT 1')
+public_lists = cursor.fetchall()
+train_oldFileNames=public_lists[0][0]
+
+cursor.execute('select train_id, pending_ver from train_other_info;')
+file_lists = cursor.fetchall()
+#print(file_lists)
+for train_id in file_lists:
+    train_filerecord[train_id[0]] = train_id[1]
+#print(train_filerecord)
 
 while True:
     print('start')
@@ -96,7 +107,7 @@ while True:
         print(newFileNamesyuan)
         if ".zip" in newFileNamesyuan[0]:
             newFileNames = newFileNamesyuan[0].split('.zip')[0]
-            print(newFileNames)
+            #print(newFileNames)
         else:
             print("更新包文件名不符合要求")
     except:
@@ -109,7 +120,7 @@ while True:
             oldFileNames=newFileNames
             sql = "update train_other_info set update_status = 1,pending_ver='%s';" % (newFileNames)
             db_insert_update_del(cursor, sql)
-            print(newFileNames)
+            #print(newFileNames)
     else:
         #print("noupdatefile")
         pass
@@ -120,26 +131,35 @@ while True:
     ids = {}
     for train_id in id_lists:
         ids[train_id[0]] = train_id[1]
-    print(ids)
+    #print(ids)
     for train_id,pending_ver in ids.items():
         try:
             train_updatefile_path = '/home/chsr/data.d/ground-to-train.d/%s'%train_id
             try:
                 train_newFileNamesyuan = os.listdir(train_updatefile_path)
-                print(train_newFileNamesyuan)
+                #print(train_newFileNamesyuan)
                 if ".zip" in train_newFileNamesyuan[0]:
-                    train_newFileNames = train_newFileNamesyuan[0].split('.zip')[0]
-                    print(train_newFileNames)
+                    train_newFileNames[train_id] = train_newFileNamesyuan[0].split('.zip')[0]
+                    #print(train_newFileNames[train_id])
             except:
+                #print('%s nofile'%train_id)
                 pass
-            if (len(train_newFileNames) > 0):
-                if (train_newFileNames == train_oldFileNames):
-                    pass
+            if (len(train_newFileNames[train_id]) > 0):
+                if(train_filerecord[train_id]):
+                    if (train_newFileNames == train_filerecord[train_id]):
+                        #print("666666")
+                        pass
+                    else:
+                        sql = "update train_other_info set update_status = 1,pending_ver='%s' where train_id='%s';" % (train_newFileNames, train_id)
+                        db_insert_update_del(cursor, sql)
+                        train_filerecord[train_id] = train_newFileNames
+                        #print(train_newFileNames)
                 else:
+                    train_filerecord[train_id]=train_newFileNames
                     sql = "update train_other_info set update_status = 1,pending_ver='%s' where train_id='%s';" % (train_newFileNames, train_id)
                     db_insert_update_del(cursor, sql)
-                    train_oldFileNames = train_newFileNames
-                    print(train_newFileNames)
+                    train_filerecord[train_id] = train_newFileNames
+                    #print(train_newFileNames)
             else:
                 #print("train_noupdatefile")
                 pass
@@ -155,22 +175,22 @@ while True:
         train_ids = {}
         for train_id in train_id_lists:
             train_ids[train_id[0]] = train_id[1]
-        print(train_ids)
+        #print(train_ids)
         for train_id, pending_ver in train_ids.items():
             try:
                 #fileList = os.listdir('/home/chsr/data.d/train-to-ground.d/%s/updateinfo/'%train_id)
                 #print(fileList[0])
                 file_name='%s+%s'%(train_id,pending_ver)
                 file_path='/home/chsr/data.d/train-to-ground.d/%s/updateinfo/%s'%(train_id,file_name)
-                print(file_path)
+                #print(file_path)
                 file_r = open(file_path,'r')
                 status = file_r.readline(1)
-                print(status)
+                #print(status)
                 file_r.close()
                 if status=='1':
                     print('ok')
                     update_time = datetime.datetime.now().strftime('%Y-%m-%d')
-                    print(update_time)
+                    #print(update_time)
                     sql = "update train_other_info set update_status = 0,update_time='%s',curr_ver='%s' where train_id = '%s';" % (update_time,pending_ver,train_id)
                     db_insert_update_del(cursor, sql)
                     try:
